@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Calendar</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: white;
+            color: black;
+            line-height: 1.6;
+            padding-bottom: 120px;
+        }
+
+        .calendar-container {
+            max-width: 900px;
+            margin: 50px auto;
+            background: white;
+            border: 2px solid black;
+            border-radius: 8px;
+            padding: 20px;
+            transition: opacity 0.3s ease;
+        }
+
+        .calendar-container.hidden {
+            display: none;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .calendar-nav {
+            display: flex;
+            gap: 10px;
+        }
+
+        .calendar-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: black;
+            border: 2px solid black;
+        }
+
+        .calendar-day-header {
+            background: black;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .calendar-day {
+            background: white;
+            min-height: 100px;
+            padding: 8px;
+            border: 1px solid #eee;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s ease;
+        }
+
+        .calendar-day:hover {
+            background: #f5f5f5;
+        }
+
+        .calendar-day.other-month {
+            background: #f9f9f9;
+            color: #999;
+        }
+
+        .calendar-day.today {
+            background: #f0f0f0;
+            font-weight: 600;
+        }
+
+        .calendar-day.selected {
+            background: #e0e0e0;
+        }
+
+        .calendar-day.has-subscription {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calendar-day.has-subscription::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--subscription-color, #000);
+            opacity: 0.1;
+            z-index: 1;
+            transition: all 0.5s ease;
+        }
+
+        .calendar-day.has-multiple-subscriptions::before {
+            animation: colorTransition 3s ease-in-out infinite;
+        }
+
+        @keyframes colorTransition {
+            0% { 
+                opacity: 0.1; 
+                transform: scale(1);
+            }
+            50% { 
+                opacity: 0.3; 
+                transform: scale(1.02);
+            }
+            100% { 
+                opacity: 0.1; 
+                transform: scale(1);
+            }
+        }
+
+        .day-number {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+
+        .daily-details {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .daily-details h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .subscription-item {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .subscription-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .subscription-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .subscription-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .btn {
+            background: black;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 12px;
+        }
+
+        .btn:hover {
+            background: #333;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: black;
+            border: 1px solid black;
+        }
+
+        .btn-secondary:hover {
+            background: #f5f5f5;
+        }
+
+        .floating-navbar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border: 2px solid black;
+            border-radius: 25px;
+            padding: 15px 25px;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 350px;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .nav-item:hover {
+            background: #f5f5f5;
+        }
+
+        .nav-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .nav-icon.analytics {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-icon.settings {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-icon.plus {
+            background: black;
+            color: white;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .nav-icon.plus:hover {
+            background: #333;
+            transform: scale(1.1);
+        }
+
+        .nav-icon.plus.active {
+            background: #666;
+            transform: rotate(45deg);
+        }
+
+        .nav-label {
+            font-size: 12px;
+            font-weight: 500;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .nav-menu {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            border: 2px solid black;
+            border-radius: 8px;
+            padding: 20px;
+            min-width: 300px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .nav-menu.show {
+            display: flex;
+        }
+
+        .menu-section {
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .menu-section:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .menu-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #666;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-size: 14px;
+        }
+
+        .menu-item:hover {
+            background: #f5f5f5;
+        }
+
+        .menu-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        .nav-form {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 8px;
+            border: 1px solid black;
+            border-radius: 4px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            width: 120px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #333;
+        }
+
+        .color-picker {
+            width: 30px;
+            height: 30px;
+            border: 1px solid black;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .analytics-panel {
+            display: none;
+            background: white;
+            border: 2px solid black;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 50px auto;
+            max-width: 900px;
+            transition: opacity 0.3s ease;
+        }
+
+        .analytics-panel.show {
+            display: block;
+        }
+
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .analytics-item {
+            text-align: center;
+            padding: 15px;
+            border: 1px solid #eee;
+            border-radius: 4px;
+        }
+
+        .analytics-item h4 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .analytics-item p {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .settings-panel {
+            display: none;
+            background: white;
+            border: 2px solid black;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 50px auto;
+            max-width: 900px;
+            transition: opacity 0.3s ease;
+        }
+
+        .settings-panel.show {
+            display: block;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .setting-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: #ccc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: black;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(26px);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 15% auto;
+            padding: 30px;
+            border: 2px solid black;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .close {
+            color: black;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .calendar-container {
+                margin: 20px;
+                padding: 15px;
+            }
+            
+            .calendar-day {
+                min-height: 80px;
+            }
+            
+            .floating-navbar {
+                flex-direction: column;
+                padding: 10px;
+            }
+            
+            .nav-form {
+                justify-content: center;
+            }
+            
+            .form-group input,
+            .form-group select {
+                width: 100px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="calendar-container" id="calendar-container">
+        <div class="calendar-header">
+            <div class="calendar-nav">
+                <button class="btn btn-secondary" id="prevMonth">←</button>
+                <button class="btn btn-secondary" id="nextMonth">→</button>
+            </div>
+            <h2 class="calendar-title" id="calendarTitle"></h2>
+        </div>
+        <div class="calendar-grid" id="calendarGrid"></div>
+        <div class="daily-details" id="dailyDetails">
+            <h3 id="dailyDetailsTitle">Select a date to view subscriptions</h3>
+            <div id="dailySubscriptions"></div>
+        </div>
+    </div>
+
+    <div class="floating-navbar">
+        <div class="nav-container">
+            <div class="nav-item" id="calendarNav">
+                <div class="nav-icon analytics">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                    </svg>
+                </div>
+                <div class="nav-label">Calendar</div>
+            </div>
+            
+            <div class="nav-item" id="analyticsNav">
+                <div class="nav-icon analytics">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M3 13h2v8H3v-8zm4-6h2v14H7V7zm4-6h2v20h-2V1zm4 4h2v16h-2V5zm4 4h2v12h-2V9z"/>
+                    </svg>
+                </div>
+                <div class="nav-label">Analytics</div>
+            </div>
+            
+            <div class="nav-item" id="plusNav">
+                <div class="nav-icon plus" id="navPlus">+</div>
+                <div class="nav-label">Add</div>
+                <div class="nav-menu" id="navMenu">
+                    <div class="menu-section">
+                        <div class="menu-title">Add Subscription</div>
+                        <form id="subscriptionForm" class="nav-form">
+                            <div class="form-group">
+                                <label for="subscriptionName">Name</label>
+                                <input type="text" id="subscriptionName" placeholder="Netflix" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="subscriptionPrice">Price</label>
+                                <input type="number" id="subscriptionPrice" step="0.01" placeholder="9.99" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="billingCycle">Cycle</label>
+                                <select id="billingCycle" required>
+                                    <option value="monthly">Monthly</option>
+                                    <option value="yearly">Yearly</option>
+                                    <option value="weekly">Weekly</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="startDate">Start Date</label>
+                                <input type="date" id="startDate" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="subscriptionColor">Color</label>
+                                <input type="color" id="subscriptionColor" class="color-picker" value="#ff0000">
+                            </div>
+                            <button type="submit" class="btn">Add</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="nav-item" id="settingsNav">
+                <div class="nav-icon settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.82,11.69,4.82,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+                    </svg>
+                </div>
+                <div class="nav-label">Settings</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="analytics-panel" id="analyticsPanel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3>Analytics</h3>
+            <button class="btn btn-secondary" onclick="calendar.showCalendar()" style="font-size: 12px; padding: 6px 12px;">← Back to Calendar</button>
+        </div>
+        <div class="analytics-grid">
+            <div class="analytics-item">
+                <h4 id="totalSubscriptions">0</h4>
+                <p>Total Subscriptions</p>
+            </div>
+            <div class="analytics-item">
+                <h4 id="monthlyCost">$0.00</h4>
+                <p>Monthly Cost</p>
+            </div>
+            <div class="analytics-item">
+                <h4 id="yearlyCost">$0.00</h4>
+                <p>Yearly Cost</p>
+            </div>
+            <div class="analytics-item">
+                <h4 id="mostExpensive">$0.00</h4>
+                <p>Most Expensive</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-panel" id="settingsPanel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3>Settings</h3>
+            <button class="btn btn-secondary" onclick="calendar.showCalendar()" style="font-size: 12px; padding: 6px 12px;">← Back to Calendar</button>
+        </div>
+        <div class="setting-item">
+            <span class="setting-label">Dark Mode</span>
+            <div class="setting-control">
+                <div class="toggle-switch" id="darkModeToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+        </div>
+        <div class="setting-item">
+            <span class="setting-label">Show Week Numbers</span>
+            <div class="setting-control">
+                <div class="toggle-switch" id="weekNumbersToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+        </div>
+        <div class="setting-item">
+            <span class="setting-label">Auto-refresh Calendar</span>
+            <div class="setting-control">
+                <div class="toggle-switch" id="autoRefreshToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        class SubscriptionCalendar {
+            constructor() {
+                this.subscriptions = JSON.parse(localStorage.getItem('subscriptions')) || [];
+                this.currentDate = new Date();
+                this.currentMonth = this.currentDate.getMonth();
+                this.currentYear = this.currentDate.getFullYear();
+                this.selectedDate = null;
+                
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.renderCalendar();
+                this.resetForm();
+                this.updateAnalytics();
+            }
+
+            setupEventListeners() {
+                // Plus button toggle
+                document.getElementById('navPlus').addEventListener('click', () => {
+                    this.toggleMenu();
+                });
+
+                // Close menu when clicking outside
+                document.addEventListener('click', (e) => {
+                    if (!e.target.closest('.nav-item')) {
+                        this.closeMenu();
+                    }
+                });
+
+                // Subscription form
+                document.getElementById('subscriptionForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.addSubscription();
+                });
+
+                // Calendar button
+                document.getElementById('calendarNav').addEventListener('click', () => {
+                    this.showCalendar();
+                    this.closeMenu();
+                });
+
+                // Analytics button
+                document.getElementById('analyticsNav').addEventListener('click', () => {
+                    this.showAnalytics();
+                    this.closeMenu();
+                });
+
+                // Settings button
+                document.getElementById('settingsNav').addEventListener('click', () => {
+                    this.showSettings();
+                    this.closeMenu();
+                });
+
+                // Calendar navigation
+                document.getElementById('prevMonth').addEventListener('click', () => {
+                    this.currentMonth--;
+                    if (this.currentMonth < 0) {
+                        this.currentMonth = 11;
+                        this.currentYear--;
+                    }
+                    this.renderCalendar();
+                });
+
+                document.getElementById('nextMonth').addEventListener('click', () => {
+                    this.currentMonth++;
+                    if (this.currentMonth > 11) {
+                        this.currentMonth = 0;
+                        this.currentYear++;
+                    }
+                    this.renderCalendar();
+                });
+
+                // Settings toggles
+                this.setupSettingsToggles();
+            }
+
+            toggleMenu() {
+                const menu = document.getElementById('navMenu');
+                const plus = document.getElementById('navPlus');
+                
+                if (menu.classList.contains('show')) {
+                    this.closeMenu();
+                } else {
+                    menu.classList.add('show');
+                    plus.classList.add('active');
+                }
+            }
+
+            closeMenu() {
+                const menu = document.getElementById('navMenu');
+                const plus = document.getElementById('navPlus');
+                
+                menu.classList.remove('show');
+                plus.classList.remove('active');
+            }
+
+            showAnalytics() {
+                this.hideAllPanels();
+                document.getElementById('calendar-container').classList.add('hidden');
+                document.getElementById('analyticsPanel').classList.add('show');
+                this.updateAnalytics();
+            }
+
+            showSettings() {
+                this.hideAllPanels();
+                document.getElementById('calendar-container').classList.add('hidden');
+                document.getElementById('settingsPanel').classList.add('show');
+            }
+
+            showCalendar() {
+                this.hideAllPanels();
+                document.getElementById('calendar-container').classList.remove('hidden');
+            }
+
+            hideAllPanels() {
+                document.getElementById('analyticsPanel').classList.remove('show');
+                document.getElementById('settingsPanel').classList.remove('show');
+                document.getElementById('calendar-container').classList.remove('hidden');
+            }
+
+            setupSettingsToggles() {
+                // Dark mode toggle
+                document.getElementById('darkModeToggle').addEventListener('click', () => {
+                    this.toggleSetting('darkModeToggle');
+                });
+
+                // Week numbers toggle
+                document.getElementById('weekNumbersToggle').addEventListener('click', () => {
+                    this.toggleSetting('weekNumbersToggle');
+                });
+
+                // Auto refresh toggle
+                document.getElementById('autoRefreshToggle').addEventListener('click', () => {
+                    this.toggleSetting('autoRefreshToggle');
+                });
+            }
+
+            toggleSetting(toggleId) {
+                const toggle = document.getElementById(toggleId);
+                toggle.classList.toggle('active');
+                
+                // Save setting to localStorage
+                const settingName = toggleId.replace('Toggle', '');
+                localStorage.setItem(settingName, toggle.classList.contains('active'));
+            }
+
+            addSubscription() {
+                const name = document.getElementById('subscriptionName').value;
+                const price = parseFloat(document.getElementById('subscriptionPrice').value);
+                const billingCycle = document.getElementById('billingCycle').value;
+                const startDate = new Date(document.getElementById('startDate').value);
+                const color = document.getElementById('subscriptionColor').value;
+
+                const subscription = {
+                    id: Date.now(),
+                    name,
+                    price,
+                    billingCycle,
+                    startDate: startDate.toISOString(),
+                    color,
+                    nextBillingDate: this.calculateNextBillingDate(startDate, billingCycle)
+                };
+
+                this.subscriptions.push(subscription);
+                this.saveSubscriptions();
+                this.renderCalendar();
+                this.resetForm();
+                this.closeMenu();
+            }
+
+            calculateNextBillingDate(startDate, billingCycle) {
+                const nextDate = new Date(startDate);
+                switch (billingCycle) {
+                    case 'weekly':
+                        nextDate.setDate(nextDate.getDate() + 7);
+                        break;
+                    case 'monthly':
+                        nextDate.setMonth(nextDate.getMonth() + 1);
+                        break;
+                    case 'yearly':
+                        nextDate.setFullYear(nextDate.getFullYear() + 1);
+                        break;
+                }
+                return nextDate.toISOString();
+            }
+
+            resetForm() {
+                document.getElementById('subscriptionForm').reset();
+                document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
+                document.getElementById('subscriptionColor').value = this.getRandomColor();
+            }
+
+            getRandomColor() {
+                const colors = ['#ff0000', '#00ff00', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ff8800', '#8800ff', '#00ff88', '#ff0088'];
+                return colors[Math.floor(Math.random() * colors.length)];
+            }
+
+            renderCalendar() {
+                const calendarTitle = document.getElementById('calendarTitle');
+                const calendarGrid = document.getElementById('calendarGrid');
+                
+                const monthNames = [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ];
+
+                calendarTitle.textContent = `${monthNames[this.currentMonth]} ${this.currentYear}`;
+
+                // Clear calendar
+                calendarGrid.innerHTML = '';
+
+                // Add day headers
+                const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                dayHeaders.forEach(day => {
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'calendar-day-header';
+                    dayHeader.textContent = day;
+                    calendarGrid.appendChild(dayHeader);
+                });
+
+                // Get first day of month and number of days
+                const firstDay = new Date(this.currentYear, this.currentMonth, 1);
+                const lastDay = new Date(this.currentYear, this.currentMonth + 1, 0);
+                const daysInMonth = lastDay.getDate();
+                const startingDayOfWeek = firstDay.getDay();
+
+                // Add empty cells for days before month starts
+                for (let i = 0; i < startingDayOfWeek; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'calendar-day other-month';
+                    calendarGrid.appendChild(emptyDay);
+                }
+
+                // Add days of the month
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayElement = document.createElement('div');
+                    dayElement.className = 'calendar-day';
+                    
+                    const dayNumber = document.createElement('div');
+                    dayNumber.className = 'day-number';
+                    dayNumber.textContent = day;
+                    dayElement.appendChild(dayNumber);
+
+                    // Check if this is today
+                    const today = new Date();
+                    if (day === today.getDate() && 
+                        this.currentMonth === today.getMonth() && 
+                        this.currentYear === today.getFullYear()) {
+                        dayElement.classList.add('today');
+                    }
+
+                    // Add click event to show daily details
+                    dayElement.addEventListener('click', () => {
+                        this.selectDate(day, dayElement);
+                    });
+
+                    // Add subscriptions for this day
+                    this.addSubscriptionsToDay(dayElement, day);
+
+                    calendarGrid.appendChild(dayElement);
+                }
+
+                // Add empty cells for days after month ends
+                const totalCells = calendarGrid.children.length - 7; // Subtract day headers
+                const remainingCells = 42 - totalCells; // 6 rows * 7 days
+                for (let i = 0; i < remainingCells; i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'calendar-day other-month';
+                    calendarGrid.appendChild(emptyDay);
+                }
+            }
+
+            selectDate(day, dayElement) {
+                // Remove previous selection
+                document.querySelectorAll('.calendar-day.selected').forEach(el => {
+                    el.classList.remove('selected');
+                });
+
+                // Add selection to current day
+                dayElement.classList.add('selected');
+                this.selectedDate = new Date(this.currentYear, this.currentMonth, day);
+                this.showDailyDetails(day);
+            }
+
+            showDailyDetails(day) {
+                const dailyDetails = document.getElementById('dailyDetails');
+                const dailyDetailsTitle = document.getElementById('dailyDetailsTitle');
+                const dailySubscriptions = document.getElementById('dailySubscriptions');
+
+                const selectedDate = new Date(this.currentYear, this.currentMonth, day);
+                const daySubscriptions = this.getSubscriptionsForDate(selectedDate);
+
+                dailyDetailsTitle.textContent = `Subscriptions for ${selectedDate.toLocaleDateString()}`;
+                dailySubscriptions.innerHTML = '';
+
+                if (daySubscriptions.length === 0) {
+                    dailySubscriptions.innerHTML = '<p>No subscriptions for this date.</p>';
+                } else {
+                    daySubscriptions.forEach(subscription => {
+                        const subscriptionItem = document.createElement('div');
+                        subscriptionItem.className = 'subscription-item';
+                        subscriptionItem.innerHTML = `
+                            <div class="subscription-info">
+                                <div class="subscription-color" style="background-color: ${subscription.color}"></div>
+                                <div>
+                                    <strong>${subscription.name}</strong><br>
+                                    <small>$${subscription.price} (${subscription.billingCycle})</small>
+                                </div>
+                            </div>
+                            <div class="subscription-actions">
+                                <button class="btn btn-secondary" onclick="calendar.deleteSubscription(${subscription.id})">Delete</button>
+                                <button class="btn" onclick="calendar.updateNextBilling(${subscription.id})">Mark Paid</button>
+                            </div>
+                        `;
+                        dailySubscriptions.appendChild(subscriptionItem);
+                    });
+                }
+
+                dailyDetails.style.display = 'block';
+            }
+
+            getSubscriptionsForDate(date) {
+                return this.subscriptions.filter(subscription => {
+                    // Check if this date matches any recurring billing date
+                    const startDate = new Date(subscription.startDate);
+                    const billingCycle = subscription.billingCycle;
+                    
+                    // Calculate all possible billing dates from start date to current month
+                    let currentBillingDate = new Date(startDate);
+                    
+                    // For weekly subscriptions, check every 7 days
+                    if (billingCycle === 'weekly') {
+                        while (currentBillingDate <= new Date(this.currentYear, this.currentMonth + 1, 0)) {
+                            if (this.isSameDate(date, currentBillingDate)) {
+                                return true;
+                            }
+                            currentBillingDate.setDate(currentBillingDate.getDate() + 7);
+                        }
+                    }
+                    // For monthly subscriptions, check same day of each month
+                    else if (billingCycle === 'monthly') {
+                        while (currentBillingDate <= new Date(this.currentYear, this.currentMonth + 1, 0)) {
+                            if (this.isSameDate(date, currentBillingDate)) {
+                                return true;
+                            }
+                            currentBillingDate.setMonth(currentBillingDate.getMonth() + 1);
+                        }
+                    }
+                    // For yearly subscriptions, check same day of each year
+                    else if (billingCycle === 'yearly') {
+                        while (currentBillingDate <= new Date(this.currentYear, this.currentMonth + 1, 0)) {
+                            if (this.isSameDate(date, currentBillingDate)) {
+                                return true;
+                            }
+                            currentBillingDate.setFullYear(currentBillingDate.getFullYear() + 1);
+                        }
+                    }
+                    
+                    return false;
+                });
+            }
+
+            addSubscriptionsToDay(dayElement, day) {
+                const currentDate = new Date(this.currentYear, this.currentMonth, day);
+                const daySubscriptions = this.getSubscriptionsForDate(currentDate);
+                
+                if (daySubscriptions.length > 0) {
+                    dayElement.classList.add('has-subscription');
+                    
+                    // If multiple subscriptions, add animation class
+                    if (daySubscriptions.length > 1) {
+                        dayElement.classList.add('has-multiple-subscriptions');
+                    }
+                    
+                    // Set background color based on subscription
+                    if (daySubscriptions.length === 1) {
+                        const subscription = daySubscriptions[0];
+                        dayElement.style.setProperty('--subscription-color', subscription.color);
+                        dayElement.style.background = `linear-gradient(135deg, ${subscription.color}20, ${subscription.color}10)`;
+                        dayElement.title = `${subscription.name} - $${subscription.price} (${subscription.billingCycle})`;
+                    } else {
+                        // Multiple subscriptions - use first color as base
+                        const firstSubscription = daySubscriptions[0];
+                        dayElement.style.setProperty('--subscription-color', firstSubscription.color);
+                        dayElement.style.background = `linear-gradient(135deg, ${firstSubscription.color}20, ${firstSubscription.color}10)`;
+                        dayElement.title = `${daySubscriptions.length} subscriptions: ${daySubscriptions.map(s => s.name).join(', ')}`;
+                    }
+                }
+            }
+
+            isSameDate(date1, date2) {
+                return date1.getDate() === date2.getDate() &&
+                       date1.getMonth() === date2.getMonth() &&
+                       date1.getFullYear() === date2.getFullYear();
+            }
+
+            deleteSubscription(id) {
+                this.subscriptions = this.subscriptions.filter(sub => sub.id !== id);
+                this.saveSubscriptions();
+                this.renderCalendar();
+                if (this.selectedDate) {
+                    this.showDailyDetails(this.selectedDate.getDate());
+                }
+            }
+
+            updateNextBilling(id) {
+                const subscription = this.subscriptions.find(sub => sub.id === id);
+                if (subscription) {
+                    subscription.nextBillingDate = this.calculateNextBillingDate(
+                        new Date(subscription.nextBillingDate), 
+                        subscription.billingCycle
+                    ).toISOString();
+                    this.saveSubscriptions();
+                    this.renderCalendar();
+                    if (this.selectedDate) {
+                        this.showDailyDetails(this.selectedDate.getDate());
+                    }
+                }
+            }
+
+            updateAnalytics() {
+                const totalSubscriptions = this.subscriptions.length;
+                document.getElementById('totalSubscriptions').textContent = totalSubscriptions;
+
+                let monthlyCost = 0;
+                let yearlyCost = 0;
+                let mostExpensive = 0;
+
+                this.subscriptions.forEach(subscription => {
+                    const price = subscription.price;
+                    switch (subscription.billingCycle) {
+                        case 'weekly':
+                            monthlyCost += price * 4.33; // Approximate weeks per month
+                            yearlyCost += price * 52;
+                            break;
+                        case 'monthly':
+                            monthlyCost += price;
+                            yearlyCost += price * 12;
+                            break;
+                        case 'yearly':
+                            monthlyCost += price / 12;
+                            yearlyCost += price;
+                            break;
+                    }
+                    mostExpensive = Math.max(mostExpensive, price);
+                });
+
+                document.getElementById('monthlyCost').textContent = `$${monthlyCost.toFixed(2)}`;
+                document.getElementById('yearlyCost').textContent = `$${yearlyCost.toFixed(2)}`;
+                document.getElementById('mostExpensive').textContent = `$${mostExpensive.toFixed(2)}`;
+            }
+
+            saveSubscriptions() {
+                localStorage.setItem('subscriptions', JSON.stringify(this.subscriptions));
+            }
+        }
+
+        // Initialize the calendar when the page loads
+        const calendar = new SubscriptionCalendar();
+    </script>
+</body>
+</html>
