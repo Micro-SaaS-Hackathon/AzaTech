@@ -119,20 +119,33 @@
         }
 
         .calendar-day.has-multiple-subscriptions::before {
-            animation: colorTransition 3s ease-in-out infinite;
+            animation: colorTransition 10s ease-in-out infinite;
         }
 
         @keyframes colorTransition {
             0% { 
-                opacity: 0.3; 
+                background-color: var(--subscription-color-1); 
+                opacity: 0.3;
                 transform: scale(1);
             }
+            25% { 
+                background-color: var(--subscription-color-2); 
+                opacity: 0.4;
+                transform: scale(1.01);
+            }
             50% { 
-                opacity: 0.5; 
-                transform: scale(1.02);
+                background-color: var(--subscription-color-3); 
+                opacity: 0.3;
+                transform: scale(1);
+            }
+            75% { 
+                background-color: var(--subscription-color-4); 
+                opacity: 0.4;
+                transform: scale(1.01);
             }
             100% { 
-                opacity: 0.3; 
+                background-color: var(--subscription-color-1); 
+                opacity: 0.3;
                 transform: scale(1);
             }
         }
@@ -611,6 +624,420 @@
             opacity: 0.8;
         }
 
+        .test-button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .test-button:hover {
+            background: #1565c0;
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            body {
+                font-size: 10px;
+                padding: 0;
+                margin: 0;
+                height: 100vh;
+                overflow: hidden;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .calendar-container {
+                flex: 1;
+                max-width: 100vw;
+                width: 100vw;
+                margin: 0;
+                padding: 10px;
+                border-radius: 0;
+                border: none;
+                display: flex;
+                flex-direction: column;
+                height: calc(100vh - 60px);
+            }
+
+            .calendar-header {
+                flex-direction: column;
+                gap: 6px;
+                margin-bottom: 10px;
+                padding: 0 5px;
+                flex-shrink: 0;
+            }
+
+            .calendar-nav {
+                gap: 4px;
+            }
+
+            .calendar-nav button {
+                padding: 3px 6px;
+                font-size: 8px;
+            }
+
+            .calendar-title {
+                font-size: 11px;
+                text-align: center;
+                margin: 0;
+            }
+
+            .calendar-grid {
+                gap: 1px;
+                width: 100%;
+                margin: 0 auto;
+                flex: 1;
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                grid-template-rows: repeat(6, 1fr);
+                height: 100%;
+            }
+
+            .calendar-day {
+                height: 100%;
+                width: 100%;
+                padding: 0;
+                font-size: 7px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                min-height: 0;
+            }
+
+            .day-number {
+                font-size: 7px;
+                margin: 0;
+                line-height: 1;
+            }
+
+            .floating-navbar {
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                transform: none;
+                padding: 6px 10px;
+                border-radius: 0;
+                border-left: none;
+                border-right: none;
+                border-bottom: none;
+                z-index: 1001;
+                height: 60px;
+                flex-shrink: 0;
+            }
+
+            .nav-container {
+                width: 100%;
+                justify-content: space-around;
+                display: flex;
+                align-items: center;
+                height: 100%;
+            }
+
+            .nav-item {
+                padding: 2px;
+                min-width: 40px;
+                height: 100%;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }
+
+            .nav-icon {
+                width: 20px;
+                height: 20px;
+            }
+
+            .nav-icon.plus {
+                width: 26px;
+                height: 26px;
+                font-size: 11px;
+            }
+
+            .nav-label {
+                font-size: 5px;
+                margin-top: 1px;
+            }
+
+            .nav-menu {
+                width: 95vw;
+                max-width: 300px;
+                left: 50%;
+                transform: translateX(-50%);
+                bottom: 70px;
+                top: auto;
+                padding: 10px;
+            }
+
+            .menu-section {
+                padding: 6px;
+            }
+
+            .menu-title {
+                font-size: 10px;
+                margin-bottom: 6px;
+            }
+
+            .form-group {
+                margin-bottom: 4px;
+            }
+
+            .form-group label {
+                font-size: 7px;
+                margin-bottom: 2px;
+            }
+
+            .form-group input,
+            .form-group select {
+                padding: 3px;
+                font-size: 9px;
+            }
+
+            .btn {
+                padding: 3px 6px;
+                font-size: 7px;
+            }
+
+            .daily-details {
+                margin-top: 6px;
+                padding: 6px;
+                max-height: 120px;
+                overflow-y: auto;
+            }
+
+            .daily-details h4 {
+                font-size: 10px;
+                margin-bottom: 4px;
+            }
+
+            .subscription-item {
+                padding: 4px;
+                margin-bottom: 3px;
+            }
+
+            .subscription-name {
+                font-size: 8px;
+            }
+
+            .subscription-price {
+                font-size: 6px;
+            }
+
+            .analytics-panel,
+            .log-panel,
+            .settings-panel {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 60px;
+                margin: 0;
+                padding: 10px;
+                max-width: 100%;
+                overflow-y: auto;
+                z-index: 1000;
+            }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+                gap: 6px;
+            }
+
+            .analytics-item {
+                padding: 6px;
+            }
+
+            .analytics-value {
+                font-size: 14px;
+            }
+
+            .analytics-label {
+                font-size: 7px;
+            }
+
+            .subscription-card {
+                padding: 6px;
+                margin-bottom: 6px;
+            }
+
+            .subscription-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+
+            .subscription-info h4 {
+                font-size: 10px;
+            }
+
+            .subscription-info p {
+                font-size: 6px;
+            }
+
+            .subscription-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .subscription-details-expanded {
+                margin-top: 6px;
+                padding: 6px;
+            }
+
+            .details-grid {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
+
+            .detail-item {
+                padding: 3px;
+            }
+
+            .detail-label {
+                font-size: 6px;
+            }
+
+            .detail-value {
+                font-size: 7px;
+            }
+
+            .projection-chart {
+                margin-top: 6px;
+                padding: 6px;
+            }
+
+            .monthly-breakdown {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 3px;
+            }
+
+            .month-item {
+                padding: 3px;
+            }
+
+            .month-name {
+                font-size: 5px;
+            }
+
+            .month-amount {
+                font-size: 6px;
+            }
+
+            .total-projection {
+                margin-top: 6px;
+                padding: 6px;
+            }
+
+            .total-projection h4 {
+                font-size: 10px;
+            }
+
+            .total-projection p {
+                font-size: 6px;
+            }
+
+            .setting-item {
+                padding: 3px 0;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 3px;
+            }
+
+            .setting-control {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .toggle-switch {
+                width: 30px;
+                height: 16px;
+            }
+
+            .toggle-slider {
+                width: 12px;
+                height: 12px;
+            }
+
+            .toggle-switch.active .toggle-slider {
+                transform: translateX(14px);
+            }
+
+            .form-group input[type="email"],
+            .form-group select {
+                width: 100%;
+                padding: 4px;
+                font-size: 8px;
+            }
+
+            .test-button {
+                width: 100%;
+                padding: 6px;
+                font-size: 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .calendar-container {
+                padding: 8px;
+            }
+
+            .calendar-day {
+                font-size: 6px;
+            }
+
+            .day-number {
+                font-size: 6px;
+            }
+
+            .calendar-title {
+                font-size: 9px;
+            }
+
+            .nav-container {
+                gap: 1px;
+            }
+
+            .nav-item {
+                min-width: 35px;
+                padding: 1px;
+            }
+
+            .nav-icon {
+                width: 18px;
+                height: 18px;
+            }
+
+            .nav-icon.plus {
+                width: 24px;
+                height: 24px;
+                font-size: 9px;
+            }
+
+            .nav-label {
+                font-size: 4px;
+            }
+
+            .nav-menu {
+                width: 90vw;
+                max-width: 250px;
+                padding: 8px;
+            }
+
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .monthly-breakdown {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
         .settings-panel {
             display: none;
             background: white;
@@ -825,6 +1252,7 @@
                 <div class="nav-label">Log</div>
             </div>
             
+            
             <div class="nav-item" id="settingsNav">
                 <div class="nav-icon settings">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -869,6 +1297,7 @@
         <div id="subscriptionsList"></div>
     </div>
 
+
     <div class="settings-panel" id="settingsPanel">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h3>Settings</h3>
@@ -898,6 +1327,52 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Email Notification Settings -->
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee;">
+            <h4 style="margin-bottom: 20px; color: #333;">📧 Email Notifications</h4>
+            
+            <div class="setting-item">
+                <span class="setting-label">Enable Email Notifications</span>
+                <div class="setting-control">
+                    <div class="toggle-switch" id="enableNotifications">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="emailSettings" style="display: none;">
+                <div class="form-group" style="margin: 15px 0;">
+                    <label for="emailAddress" style="display: block; margin-bottom: 5px; font-weight: 500;">Email Address</label>
+                    <input type="email" id="emailAddress" placeholder="your.email@gmail.com" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                
+                <div class="form-group" style="margin: 15px 0;">
+                    <label for="notificationDays" style="display: block; margin-bottom: 5px; font-weight: 500;">Days Before Billing</label>
+                    <select id="notificationDays" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="1">1 day before</option>
+                        <option value="3">3 days before</option>
+                        <option value="7" selected>7 days before</option>
+                        <option value="14">14 days before</option>
+                    </select>
+                </div>
+                
+                <div class="form-group" style="margin: 15px 0;">
+                    <label for="notificationTime" style="display: block; margin-bottom: 5px; font-weight: 500;">Notification Time</label>
+                    <select id="notificationTime" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="09:00">9:00 AM</option>
+                        <option value="12:00" selected>12:00 PM</option>
+                        <option value="18:00">6:00 PM</option>
+                        <option value="20:00">8:00 PM</option>
+                    </select>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <button class="test-button" onclick="calendar.testEmailNotification()" style="width: 100%; margin-bottom: 10px;">Send Test Email</button>
+                    <div id="testResult" style="font-size: 14px; text-align: center;"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
 
@@ -918,6 +1393,7 @@
                 this.renderCalendar();
                 this.resetForm();
                 this.updateAnalytics();
+                this.checkUpcomingBilling();
             }
 
             setupEventListeners() {
@@ -956,6 +1432,7 @@
                     this.showAnalytics();
                     this.closeMenu();
                 });
+
 
                 // Settings button
                 document.getElementById('settingsNav').addEventListener('click', () => {
@@ -1020,10 +1497,12 @@
                 this.updateAnalytics();
             }
 
+
             showSettings() {
                 this.hideAllPanels();
                 document.getElementById('calendar-container').classList.add('hidden');
                 document.getElementById('settingsPanel').classList.add('show');
+                this.loadNotificationSettings();
             }
 
             showCalendar() {
@@ -1053,11 +1532,26 @@
                 document.getElementById('autoRefreshToggle').addEventListener('click', () => {
                     this.toggleSetting('autoRefreshToggle');
                 });
+
+                // Email notifications toggle
+                document.getElementById('enableNotifications').addEventListener('click', () => {
+                    this.toggleSetting('enableNotifications');
+                });
             }
 
             toggleSetting(toggleId) {
                 const toggle = document.getElementById(toggleId);
                 toggle.classList.toggle('active');
+                
+                // Handle email settings visibility
+                if (toggleId === 'enableNotifications') {
+                    const emailSettings = document.getElementById('emailSettings');
+                    if (toggle.classList.contains('active')) {
+                        emailSettings.style.display = 'block';
+                    } else {
+                        emailSettings.style.display = 'none';
+                    }
+                }
                 
                 // Save setting to localStorage
                 const settingName = toggleId.replace('Toggle', '');
@@ -1297,10 +1791,22 @@
                         dayElement.style.setProperty('--subscription-color', subscription.color);
                         dayElement.title = `${subscription.name} - $${subscription.price} (${subscription.billingCycle})`;
                     } else {
-                        // Multiple subscriptions - use first color as base
-                        const firstSubscription = daySubscriptions[0];
-                        dayElement.style.setProperty('--subscription-color', firstSubscription.color);
-                        dayElement.title = `${daySubscriptions.length} subscriptions: ${daySubscriptions.map(s => s.name).join(', ')}`;
+                        // Multiple subscriptions - set up color cycling
+                        daySubscriptions.forEach((subscription, index) => {
+                            dayElement.style.setProperty(`--subscription-color-${index + 1}`, subscription.color);
+                        });
+                        
+                        // Fill remaining color slots with the last color for smooth cycling
+                        for (let i = daySubscriptions.length; i < 4; i++) {
+                            const lastColor = daySubscriptions[daySubscriptions.length - 1].color;
+                            dayElement.style.setProperty(`--subscription-color-${i + 1}`, lastColor);
+                        }
+                        
+                        // Create tooltip with all subscriptions
+                        const tooltipText = daySubscriptions.map(sub => 
+                            `${sub.name} - $${sub.price} (${sub.billingCycle})`
+                        ).join('\n');
+                        dayElement.title = tooltipText;
                     }
                 }
             }
@@ -1565,6 +2071,138 @@
                 }
                 
                 return html;
+            }
+
+            loadNotificationSettings() {
+                const settings = JSON.parse(localStorage.getItem('notificationSettings')) || {};
+                document.getElementById('emailAddress').value = settings.emailAddress || '';
+                document.getElementById('notificationDays').value = settings.notificationDays || '7';
+                document.getElementById('notificationTime').value = settings.notificationTime || '12:00';
+                
+                const enableNotifications = settings.enableNotifications || false;
+                document.getElementById('enableNotifications').checked = enableNotifications;
+                
+                // Set toggle visual state
+                const toggle = document.getElementById('enableNotifications');
+                if (enableNotifications) {
+                    toggle.classList.add('active');
+                } else {
+                    toggle.classList.remove('active');
+                }
+                
+                // Show/hide email settings based on toggle state
+                const emailSettings = document.getElementById('emailSettings');
+                if (enableNotifications) {
+                    emailSettings.style.display = 'block';
+                } else {
+                    emailSettings.style.display = 'none';
+                }
+            }
+
+            saveNotificationSettings() {
+                const settings = {
+                    emailAddress: document.getElementById('emailAddress').value,
+                    notificationDays: document.getElementById('notificationDays').value,
+                    notificationTime: document.getElementById('notificationTime').value,
+                    enableNotifications: document.getElementById('enableNotifications').checked
+                };
+                localStorage.setItem('notificationSettings', JSON.stringify(settings));
+            }
+
+            async testEmailNotification() {
+                const emailAddress = document.getElementById('emailAddress').value;
+                const testResult = document.getElementById('testResult');
+                
+                if (!emailAddress) {
+                    testResult.innerHTML = '<span style="color: #d32f2f;">Please enter your email address first.</span>';
+                    return;
+                }
+
+                // Save settings
+                this.saveNotificationSettings();
+
+                testResult.innerHTML = '<span style="color: #1976d2;">Sending test email...</span>';
+                
+                try {
+                    const response = await fetch('/api/send-test-email', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ emailAddress })
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        testResult.innerHTML = `
+                            <span style="color: #388e3c;">
+                                ✅ Test email sent successfully to ${emailAddress}!<br>
+                                <small>Check your inbox for the test email.</small>
+                            </span>
+                        `;
+                    } else {
+                        testResult.innerHTML = `<span style="color: #d32f2f;">❌ Error: ${result.error}</span>`;
+                    }
+                } catch (error) {
+                    testResult.innerHTML = `<span style="color: #d32f2f;">❌ Error: ${error.message}</span>`;
+                }
+            }
+
+            async checkUpcomingBilling() {
+                const settings = JSON.parse(localStorage.getItem('notificationSettings')) || {};
+                if (!settings.enableNotifications || !settings.emailAddress) return;
+
+                try {
+                    const response = await fetch('/api/check-upcoming-billing', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            subscriptions: this.subscriptions,
+                            notificationDays: settings.notificationDays,
+                            emailAddress: settings.emailAddress
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success && result.notificationSent) {
+                        console.log(`📧 Billing notification sent for ${result.upcomingSubscriptions.length} subscription(s)`);
+                    }
+                } catch (error) {
+                    console.error('Error checking upcoming billing:', error);
+                }
+            }
+
+            async sendBillingNotification(subscriptions) {
+                const settings = JSON.parse(localStorage.getItem('notificationSettings')) || {};
+                const emailAddress = settings.emailAddress;
+                
+                try {
+                    const response = await fetch('/api/send-billing-notification', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            emailAddress,
+                            subscriptions,
+                            daysUntilBilling: settings.notificationDays
+                        })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        console.log(`📧 Billing notification sent successfully to ${emailAddress}`);
+                    } else {
+                        console.error('Failed to send billing notification:', result.error);
+                    }
+                } catch (error) {
+                    console.error('Error sending billing notification:', error);
+                }
             }
 
             saveSubscriptions() {
