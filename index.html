@@ -7,6 +7,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -455,6 +460,64 @@
             color: #666;
         }
 
+        .chart-container {
+            background: white;
+            border: 2px solid black;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .bar-chart-container {
+            background: white;
+            border: 2px solid black;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            height: 300px;
+            display: flex;
+            align-items: end;
+            justify-content: space-between;
+            gap: 2px;
+        }
+
+        .bar-chart-bar {
+            background: black;
+            min-height: 10px;
+            flex: 1;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .bar-chart-bar:hover {
+            opacity: 0.7;
+        }
+
+        .custom-tooltip {
+            position: absolute;
+            background: black;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: pre-line;
+            z-index: 1000;
+            pointer-events: none;
+            max-width: 300px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+
+
+
+
+
         .log-panel {
             display: none;
             background: white;
@@ -681,7 +744,7 @@
             }
 
             .calendar-title {
-                font-size: 11px;
+                font-size: 14px;
                 text-align: center;
                 margin: 0;
             }
@@ -701,7 +764,7 @@
                 height: 100%;
                 width: 100%;
                 padding: 0;
-                font-size: 7px;
+                font-size: 10px;
                 display: flex;
                 flex-direction: column;
                 justify-content: center;
@@ -710,7 +773,7 @@
             }
 
             .day-number {
-                font-size: 7px;
+                font-size: 10px;
                 margin: 0;
                 line-height: 1;
             }
@@ -761,7 +824,7 @@
             }
 
             .nav-label {
-                font-size: 5px;
+                font-size: 8px;
                 margin-top: 1px;
             }
 
@@ -851,6 +914,12 @@
 
             .analytics-item {
                 padding: 6px;
+            }
+
+            .bar-chart-container {
+                height: 200px;
+                padding: 10px;
+                margin: 10px 0;
             }
 
             .analytics-value {
@@ -988,15 +1057,15 @@
             }
 
             .calendar-day {
-                font-size: 6px;
+                font-size: 9px;
             }
 
             .day-number {
-                font-size: 6px;
+                font-size: 9px;
             }
 
             .calendar-title {
-                font-size: 9px;
+                font-size: 12px;
             }
 
             .nav-container {
@@ -1020,7 +1089,7 @@
             }
 
             .nav-label {
-                font-size: 4px;
+                font-size: 7px;
             }
 
             .nav-menu {
@@ -1269,6 +1338,8 @@
             <h3>Analytics</h3>
             <button class="btn btn-secondary" onclick="calendar.showCalendar()" style="font-size: 12px; padding: 6px 12px;">← Back to Calendar</button>
         </div>
+        
+        <!-- Summary Stats -->
         <div class="analytics-grid">
             <div class="analytics-item">
                 <h4 id="totalSubscriptions">0</h4>
@@ -1286,6 +1357,11 @@
                 <h4 id="mostExpensive">$0.00</h4>
                 <p>Most Expensive</p>
             </div>
+        </div>
+
+        <!-- Monthly Spending Bar Chart -->
+        <div class="bar-chart-container" id="monthlySpendingChart">
+            <!-- Bars will be dynamically generated here -->
         </div>
     </div>
 
@@ -1325,6 +1401,13 @@
                 <div class="toggle-switch" id="autoRefreshToggle">
                     <div class="toggle-slider"></div>
                 </div>
+            </div>
+        </div>
+        
+        <div class="setting-item">
+            <span class="setting-label">Account</span>
+            <div class="setting-control">
+                <button class="btn btn-secondary" onclick="calendar.logout()" style="font-size: 12px; padding: 6px 12px;">Logout</button>
             </div>
         </div>
         
@@ -1377,23 +1460,53 @@
 
 
     <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            // Replace with your Firebase config
+            apiKey: "your-api-key",
+            authDomain: "your-project.firebaseapp.com",
+            projectId: "your-project-id",
+            storageBucket: "your-project.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "your-app-id"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
         class SubscriptionCalendar {
             constructor() {
-                this.subscriptions = JSON.parse(localStorage.getItem('subscriptions')) || [];
+                this.subscriptions = [];
                 this.currentDate = new Date();
                 this.currentMonth = this.currentDate.getMonth();
                 this.currentYear = this.currentDate.getFullYear();
                 this.selectedDate = null;
+                this.user = null;
+                this.isLoading = false;
                 
                 this.init();
             }
 
             init() {
                 this.setupEventListeners();
-                this.renderCalendar();
-                this.resetForm();
-                this.updateAnalytics();
-                this.checkUpcomingBilling();
+                this.setupAuthStateListener();
+            }
+
+            async setupAuthStateListener() {
+                auth.onAuthStateChanged(async (user) => {
+                    if (user) {
+                        this.user = user;
+                        await this.loadSubscriptionsFromFirebase();
+                        this.renderCalendar();
+                        this.updateAnalytics();
+                        this.checkUpcomingBilling();
+                    } else {
+                        // User not logged in, redirect to auth page
+                        window.location.href = 'auth.html';
+                    }
+                });
             }
 
             setupEventListeners() {
@@ -1410,9 +1523,9 @@
                 });
 
                 // Subscription form
-                document.getElementById('subscriptionForm').addEventListener('submit', (e) => {
+                document.getElementById('subscriptionForm').addEventListener('submit', async (e) => {
                     e.preventDefault();
-                    this.addSubscription();
+                    await this.addSubscription();
                 });
 
                 // Calendar button
@@ -1558,7 +1671,12 @@
                 localStorage.setItem(settingName, toggle.classList.contains('active'));
             }
 
-            addSubscription() {
+            async addSubscription() {
+                if (!this.user) {
+                    console.error('User not authenticated');
+                    return;
+                }
+
                 const name = document.getElementById('subscriptionName').value;
                 const price = parseFloat(document.getElementById('subscriptionPrice').value);
                 const billingCycle = document.getElementById('billingCycle').value;
@@ -1576,8 +1694,9 @@
                 };
 
                 this.subscriptions.push(subscription);
-                this.saveSubscriptions();
+                await this.saveSubscriptions();
                 this.renderCalendar();
+                this.updateAnalytics();
                 this.resetForm();
                 this.closeMenu();
             }
@@ -1817,9 +1936,9 @@
                        date1.getFullYear() === date2.getFullYear();
             }
 
-            deleteSubscription(id) {
+            async deleteSubscription(id) {
                 this.subscriptions = this.subscriptions.filter(sub => sub.id !== id);
-                this.saveSubscriptions();
+                await this.saveSubscriptions();
                 this.renderCalendar();
                 this.updateAnalytics();
                 
@@ -1834,14 +1953,14 @@
                 }
             }
 
-            updateNextBilling(id) {
+            async updateNextBilling(id) {
                 const subscription = this.subscriptions.find(sub => sub.id === id);
                 if (subscription) {
                     subscription.nextBillingDate = this.calculateNextBillingDate(
                         new Date(subscription.nextBillingDate), 
                         subscription.billingCycle
                     ).toISOString();
-                    this.saveSubscriptions();
+                    await this.saveSubscriptions();
                     this.renderCalendar();
                     if (this.selectedDate) {
                         this.showDailyDetails(this.selectedDate.getDate());
@@ -1856,6 +1975,8 @@
                 let monthlyCost = 0;
                 let yearlyCost = 0;
                 let mostExpensive = 0;
+                let mostExpensiveSubscription = null;
+                let weeklyCost = 0;
 
                 this.subscriptions.forEach(subscription => {
                     const price = subscription.price;
@@ -1863,6 +1984,7 @@
                         case 'weekly':
                             monthlyCost += price * 4.33; // Approximate weeks per month
                             yearlyCost += price * 52;
+                            weeklyCost += price;
                             break;
                         case 'monthly':
                             monthlyCost += price;
@@ -1873,12 +1995,194 @@
                             yearlyCost += price;
                             break;
                     }
-                    mostExpensive = Math.max(mostExpensive, price);
+                    if (price > mostExpensive) {
+                        mostExpensive = price;
+                        mostExpensiveSubscription = subscription;
+                    }
                 });
 
                 document.getElementById('monthlyCost').textContent = `$${monthlyCost.toFixed(2)}`;
                 document.getElementById('yearlyCost').textContent = `$${yearlyCost.toFixed(2)}`;
-                document.getElementById('mostExpensive').textContent = `$${mostExpensive.toFixed(2)}`;
+                document.getElementById('mostExpensive').textContent = mostExpensiveSubscription ? 
+                    mostExpensiveSubscription.name : 'None';
+
+                // Update the monthly spending bar chart
+                this.renderMonthlySpendingChart();
+            }
+
+
+            calculateAverageMonthly() {
+                if (this.subscriptions.length === 0) return '$0.00';
+                let total = 0;
+                this.subscriptions.forEach(subscription => {
+                    const price = subscription.price;
+                    switch (subscription.billingCycle) {
+                        case 'weekly':
+                            total += price * 4.33;
+                            break;
+                        case 'monthly':
+                            total += price;
+                            break;
+                        case 'yearly':
+                            total += price / 12;
+                            break;
+                    }
+                });
+                return `$${(total / this.subscriptions.length).toFixed(2)}`;
+            }
+
+            getMostCommonCycle() {
+                const cycles = { weekly: 0, monthly: 0, yearly: 0 };
+                this.subscriptions.forEach(subscription => {
+                    cycles[subscription.billingCycle]++;
+                });
+                const max = Math.max(...Object.values(cycles));
+                const mostCommon = Object.keys(cycles).find(key => cycles[key] === max);
+                return mostCommon ? mostCommon.charAt(0).toUpperCase() + mostCommon.slice(1) : 'None';
+            }
+
+            calculateSavingsPotential() {
+                // Simple calculation: if user has yearly subscriptions, show potential monthly savings
+                let yearlySavings = 0;
+                this.subscriptions.forEach(subscription => {
+                    if (subscription.billingCycle === 'yearly') {
+                        yearlySavings += subscription.price * 0.1; // 10% savings assumption
+                    }
+                });
+                return `$${yearlySavings.toFixed(2)}`;
+            }
+
+            calculateMonthlySpending() {
+                const monthlyData = [];
+                const currentDate = new Date();
+                
+                // Calculate spending for the last 12 months
+                for (let i = 11; i >= 0; i--) {
+                    const monthDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+                    const monthEnd = new Date(monthDate.getFullYear(), monthDate.getMonth() + 1, 0);
+                    
+                    let monthlySpending = 0;
+                    const monthSubscriptions = [];
+                    
+                    this.subscriptions.forEach(subscription => {
+                        const startDate = new Date(subscription.startDate);
+                        const billingCycle = subscription.billingCycle;
+                        let subscriptionCost = 0;
+                        
+                        if (billingCycle === 'monthly') {
+                            // Check if this subscription bills in this month
+                            if (startDate.getDate() <= monthEnd.getDate() && 
+                                startDate.getMonth() === monthDate.getMonth() && 
+                                startDate.getFullYear() <= monthDate.getFullYear()) {
+                                subscriptionCost = subscription.price;
+                                monthlySpending += subscription.price;
+                            }
+                        } else if (billingCycle === 'yearly') {
+                            // Check if this subscription bills in this month
+                            if (startDate.getMonth() === monthDate.getMonth() && 
+                                startDate.getFullYear() <= monthDate.getFullYear()) {
+                                subscriptionCost = subscription.price;
+                                monthlySpending += subscription.price;
+                            }
+                        } else if (billingCycle === 'weekly') {
+                            // Calculate weekly costs for this month
+                            let weekDate = new Date(startDate);
+                            while (weekDate <= monthEnd) {
+                                if (weekDate >= monthDate) {
+                                    subscriptionCost += subscription.price;
+                                    monthlySpending += subscription.price;
+                                }
+                                weekDate.setDate(weekDate.getDate() + 7);
+                            }
+                        }
+                        
+                        if (subscriptionCost > 0) {
+                            monthSubscriptions.push({
+                                name: subscription.name,
+                                cost: subscriptionCost,
+                                billingCycle: subscription.billingCycle
+                            });
+                        }
+                    });
+                    
+                    monthlyData.push({
+                        month: monthDate.getMonth(),
+                        year: monthDate.getFullYear(),
+                        spending: monthlySpending,
+                        subscriptions: monthSubscriptions
+                    });
+                }
+                
+                return monthlyData;
+            }
+
+            renderMonthlySpendingChart() {
+                const chartContainer = document.getElementById('monthlySpendingChart');
+                const monthlyData = this.calculateMonthlySpending();
+                
+                // Clear existing bars
+                chartContainer.innerHTML = '';
+                
+                // Get or create custom tooltip element
+                let tooltip = document.querySelector('.custom-tooltip');
+                if (!tooltip) {
+                    tooltip = document.createElement('div');
+                    tooltip.className = 'custom-tooltip';
+                    tooltip.style.display = 'none';
+                    document.body.appendChild(tooltip);
+                }
+                
+                // Find the maximum spending to scale the bars
+                const maxSpending = Math.max(...monthlyData.map(data => data.spending), 1);
+                
+                monthlyData.forEach((data, index) => {
+                    const bar = document.createElement('div');
+                    bar.className = 'bar-chart-bar';
+                    
+                    // Calculate bar height as percentage of max spending
+                    const heightPercentage = (data.spending / maxSpending) * 100;
+                    bar.style.height = `${heightPercentage}%`;
+                    
+                    // Create detailed tooltip text
+                    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                                     'July', 'August', 'September', 'October', 'November', 'December'];
+                    
+                    let tooltipText = `${monthNames[data.month]} ${data.year}\n`;
+                    tooltipText += `Total: $${data.spending.toFixed(2)}\n\n`;
+                    
+                    if (data.subscriptions.length > 0) {
+                        tooltipText += 'Subscriptions:\n';
+                        data.subscriptions.forEach(sub => {
+                            tooltipText += `• ${sub.name}: $${sub.cost.toFixed(2)} (${sub.billingCycle})\n`;
+                        });
+                    } else {
+                        tooltipText += 'No subscriptions this month';
+                    }
+                    
+                    // Add hover events
+                    bar.addEventListener('mouseenter', (e) => {
+                        tooltip.textContent = tooltipText;
+                        tooltip.style.display = 'block';
+                        this.updateTooltipPosition(e, tooltip);
+                    });
+                    
+                    bar.addEventListener('mousemove', (e) => {
+                        this.updateTooltipPosition(e, tooltip);
+                    });
+                    
+                    bar.addEventListener('mouseleave', () => {
+                        tooltip.style.display = 'none';
+                    });
+                    
+                    chartContainer.appendChild(bar);
+                });
+            }
+
+            updateTooltipPosition(e, tooltip) {
+                const x = e.clientX + 10;
+                const y = e.clientY - 10;
+                tooltip.style.left = x + 'px';
+                tooltip.style.top = y + 'px';
             }
 
             renderSubscriptionsList() {
@@ -2205,8 +2509,58 @@
                 }
             }
 
+            async loadSubscriptionsFromFirebase() {
+                if (!this.user) return;
+
+                try {
+                    this.isLoading = true;
+                    const userDoc = await db.collection('users').doc(this.user.uid).get();
+                    
+                    if (userDoc.exists) {
+                        const userData = userDoc.data();
+                        this.subscriptions = userData.subscriptions || [];
+                    } else {
+                        this.subscriptions = [];
+                    }
+                } catch (error) {
+                    console.error('Error loading subscriptions from Firebase:', error);
+                    // Fallback to localStorage
+                    this.subscriptions = JSON.parse(localStorage.getItem('subscriptions')) || [];
+                } finally {
+                    this.isLoading = false;
+                }
+            }
+
+            async saveSubscriptionsToFirebase() {
+                if (!this.user) return;
+
+                try {
+                    await db.collection('users').doc(this.user.uid).update({
+                        subscriptions: this.subscriptions
+                    });
+                } catch (error) {
+                    console.error('Error saving subscriptions to Firebase:', error);
+                    // Fallback to localStorage
+                    localStorage.setItem('subscriptions', JSON.stringify(this.subscriptions));
+                }
+            }
+
             saveSubscriptions() {
+                // Save to both Firebase and localStorage
+                this.saveSubscriptionsToFirebase();
                 localStorage.setItem('subscriptions', JSON.stringify(this.subscriptions));
+            }
+
+            async logout() {
+                try {
+                    await auth.signOut();
+                    // Clear local data
+                    this.subscriptions = [];
+                    localStorage.removeItem('subscriptions');
+                    // Redirect will happen automatically via auth state listener
+                } catch (error) {
+                    console.error('Error logging out:', error);
+                }
             }
         }
 
