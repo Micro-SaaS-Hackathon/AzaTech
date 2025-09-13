@@ -8,10 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -1213,6 +1209,184 @@
             color: #666;
         }
 
+        /* Budget Progress Bar Styles */
+        .budget-progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #ddd;
+        }
+
+        .budget-progress-fill {
+            height: 100%;
+            background: #666666;
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background-color: #121212;
+            color: #ffffff;
+        }
+
+        body.dark-mode .calendar-container {
+            background: #1e1e1e;
+            border-color: #333;
+        }
+
+        body.dark-mode .calendar-day {
+            background: #1e1e1e;
+            color: #ffffff;
+            border-color: #333;
+        }
+
+        body.dark-mode .calendar-day:hover {
+            background: #2a2a2a;
+        }
+
+        body.dark-mode .calendar-day.other-month {
+            background: #2a2a2a;
+            color: #666;
+        }
+
+        body.dark-mode .calendar-day.today {
+            background: #333;
+        }
+
+        body.dark-mode .calendar-day.selected {
+            background: #444;
+        }
+
+        body.dark-mode .calendar-day-header {
+            background: #333;
+            color: #ffffff;
+        }
+
+        body.dark-mode .calendar-grid {
+            background: #333;
+            border-color: #333;
+        }
+
+        body.dark-mode .daily-details {
+            background: #2a2a2a;
+            border-color: #333;
+        }
+
+        body.dark-mode .subscription-item {
+            background: #1e1e1e;
+            border-color: #333;
+        }
+
+        body.dark-mode .floating-navbar {
+            background: #1e1e1e;
+            border-color: #333;
+        }
+
+        body.dark-mode .nav-icon.analytics,
+        body.dark-mode .nav-icon.settings {
+            background: #333;
+            color: #ffffff;
+        }
+
+        body.dark-mode .nav-menu {
+            background: #1e1e1e;
+            border-color: #333;
+        }
+
+        body.dark-mode .menu-item:hover {
+            background: #333;
+        }
+
+        body.dark-mode .analytics-panel,
+        body.dark-mode .log-panel,
+        body.dark-mode .settings-panel {
+            background: #1e1e1e;
+            border-color: #333;
+        }
+
+        body.dark-mode .analytics-item {
+            background: #2a2a2a;
+            border-color: #333;
+        }
+
+        body.dark-mode .subscription-card {
+            background: #1e1e1e;
+            border-color: #333;
+        }
+
+        body.dark-mode .subscription-card:hover {
+            border-color: #555;
+        }
+
+        body.dark-mode .detail-item {
+            background: #2a2a2a;
+        }
+
+        body.dark-mode .month-item {
+            background: #1e1e1e;
+            border-color: #333;
+        }
+
+        body.dark-mode .total-projection {
+            background: #333;
+        }
+
+        body.dark-mode .setting-item {
+            border-bottom-color: #333;
+        }
+
+        body.dark-mode .form-group input,
+        body.dark-mode .form-group select {
+            background: #2a2a2a;
+            border-color: #333;
+            color: #ffffff;
+        }
+
+        body.dark-mode .form-group input:focus,
+        body.dark-mode .form-group select:focus {
+            border-color: #555;
+        }
+
+        body.dark-mode .budget-progress-bar {
+            background-color: #333;
+            border-color: #555;
+        }
+
+        body.dark-mode .modal-content {
+            background: #1e1e1e;
+            border-color: #333;
+        }
+
+        body.dark-mode .close {
+            color: #ffffff;
+        }
+
+        body.dark-mode .close:hover {
+            color: #ccc;
+        }
+
+        /* Dark mode title colors */
+        body.dark-mode h3,
+        body.dark-mode h4,
+        body.dark-mode h5,
+        body.dark-mode h6 {
+            color: #ffffff !important;
+        }
+
+        /* Dark mode calendar day numbers */
+        body.dark-mode .day-number {
+            color: #ffffff !important;
+        }
+
+        /* Dark mode budget progress bar */
+        body.dark-mode .budget-progress-fill {
+            background: #cccccc;
+        }
+
         @media (max-width: 768px) {
             .calendar-container {
                 margin: 20px;
@@ -1387,29 +1561,39 @@
                 </div>
             </div>
         </div>
-        <div class="setting-item">
-            <span class="setting-label">Show Week Numbers</span>
-            <div class="setting-control">
-                <div class="toggle-switch" id="weekNumbersToggle">
-                    <div class="toggle-slider"></div>
+        
+        <!-- Budget Settings -->
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee;">
+            <h4 style="margin-bottom: 20px; color: #333;">💰 Budget Management</h4>
+            
+            <div class="setting-item">
+                <div style="display: flex; flex-direction: column; gap: 10px; width: 100%;">
+                    <span class="setting-label">Monthly Budget</span>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <input type="number" id="monthlyBudget" placeholder="Enter monthly budget" step="0.01" min="0" style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <button class="btn" onclick="calendar.saveBudget()" style="padding: 8px 16px;">Save</button>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="setting-item">
-            <span class="setting-label">Auto-refresh Calendar</span>
-            <div class="setting-control">
-                <div class="toggle-switch" id="autoRefreshToggle">
-                    <div class="toggle-slider"></div>
+            
+            <div id="budgetProgressContainer" style="margin-top: 20px; display: none;">
+                <div style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                        <span style="font-weight: 500;">Current Month Spending</span>
+                        <span id="budgetSpending" style="font-weight: 600;">$0.00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="font-size: 14px; color: #666;">Budget: <span id="budgetAmount">$0.00</span></span>
+                        <span id="budgetPercentage" style="font-size: 14px; color: #666;">0%</span>
+                    </div>
                 </div>
+                <div class="budget-progress-bar">
+                    <div class="budget-progress-fill" id="budgetProgressFill"></div>
+                </div>
+                <div id="budgetStatus" style="margin-top: 10px; font-size: 14px; font-weight: 500;"></div>
             </div>
         </div>
         
-        <div class="setting-item">
-            <span class="setting-label">Account</span>
-            <div class="setting-control">
-                <button class="btn btn-secondary" onclick="calendar.logout()" style="font-size: 12px; padding: 6px 12px;">Logout</button>
-            </div>
-        </div>
         
         <!-- Email Notification Settings -->
         <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #eee;">
@@ -1460,21 +1644,6 @@
 
 
     <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            // Replace with your Firebase config
-            apiKey: "your-api-key",
-            authDomain: "your-project.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project.appspot.com",
-            messagingSenderId: "123456789",
-            appId: "your-app-id"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.firestore();
 
         class SubscriptionCalendar {
             constructor() {
@@ -1483,7 +1652,6 @@
                 this.currentMonth = this.currentDate.getMonth();
                 this.currentYear = this.currentDate.getFullYear();
                 this.selectedDate = null;
-                this.user = null;
                 this.isLoading = false;
                 
                 this.init();
@@ -1491,22 +1659,12 @@
 
             init() {
                 this.setupEventListeners();
-                this.setupAuthStateListener();
-            }
-
-            async setupAuthStateListener() {
-                auth.onAuthStateChanged(async (user) => {
-                    if (user) {
-                        this.user = user;
-                        await this.loadSubscriptionsFromFirebase();
-                        this.renderCalendar();
-                        this.updateAnalytics();
-                        this.checkUpcomingBilling();
-                    } else {
-                        // User not logged in, redirect to auth page
-                        window.location.href = 'auth.html';
-                    }
-                });
+                this.loadSubscriptions();
+                this.loadDarkMode();
+                this.renderCalendar();
+                this.updateAnalytics();
+                this.updateBudgetProgress();
+                this.checkUpcomingBilling();
             }
 
             setupEventListeners() {
@@ -1523,9 +1681,9 @@
                 });
 
                 // Subscription form
-                document.getElementById('subscriptionForm').addEventListener('submit', async (e) => {
+                document.getElementById('subscriptionForm').addEventListener('submit', (e) => {
                     e.preventDefault();
-                    await this.addSubscription();
+                    this.addSubscription();
                 });
 
                 // Calendar button
@@ -1616,6 +1774,7 @@
                 document.getElementById('calendar-container').classList.add('hidden');
                 document.getElementById('settingsPanel').classList.add('show');
                 this.loadNotificationSettings();
+                this.loadBudgetSettings();
             }
 
             showCalendar() {
@@ -1636,15 +1795,6 @@
                     this.toggleSetting('darkModeToggle');
                 });
 
-                // Week numbers toggle
-                document.getElementById('weekNumbersToggle').addEventListener('click', () => {
-                    this.toggleSetting('weekNumbersToggle');
-                });
-
-                // Auto refresh toggle
-                document.getElementById('autoRefreshToggle').addEventListener('click', () => {
-                    this.toggleSetting('autoRefreshToggle');
-                });
 
                 // Email notifications toggle
                 document.getElementById('enableNotifications').addEventListener('click', () => {
@@ -1666,17 +1816,47 @@
                     }
                 }
                 
+                // Handle dark mode toggle
+                if (toggleId === 'darkModeToggle') {
+                    this.toggleDarkMode();
+                }
+                
                 // Save setting to localStorage
                 const settingName = toggleId.replace('Toggle', '');
                 localStorage.setItem(settingName, toggle.classList.contains('active'));
             }
 
-            async addSubscription() {
-                if (!this.user) {
-                    console.error('User not authenticated');
-                    return;
+            toggleDarkMode() {
+                const body = document.body;
+                const isDarkMode = body.classList.contains('dark-mode');
+                
+                if (isDarkMode) {
+                    body.classList.remove('dark-mode');
+                } else {
+                    body.classList.add('dark-mode');
                 }
+                
+                // Save dark mode preference
+                localStorage.setItem('darkMode', !isDarkMode);
+                
+                // Update budget progress bar colors
+                this.updateBudgetProgress();
+            }
 
+            loadDarkMode() {
+                const isDarkMode = localStorage.getItem('darkMode') === 'true';
+                const darkModeToggle = document.getElementById('darkModeToggle');
+                
+                if (isDarkMode) {
+                    document.body.classList.add('dark-mode');
+                    darkModeToggle.classList.add('active');
+                } else {
+                    document.body.classList.remove('dark-mode');
+                    darkModeToggle.classList.remove('active');
+                }
+            }
+
+            addSubscription() {
                 const name = document.getElementById('subscriptionName').value;
                 const price = parseFloat(document.getElementById('subscriptionPrice').value);
                 const billingCycle = document.getElementById('billingCycle').value;
@@ -1694,9 +1874,10 @@
                 };
 
                 this.subscriptions.push(subscription);
-                await this.saveSubscriptions();
+                this.saveSubscriptions();
                 this.renderCalendar();
                 this.updateAnalytics();
+                this.updateBudgetProgress();
                 this.resetForm();
                 this.closeMenu();
             }
@@ -1936,11 +2117,12 @@
                        date1.getFullYear() === date2.getFullYear();
             }
 
-            async deleteSubscription(id) {
+            deleteSubscription(id) {
                 this.subscriptions = this.subscriptions.filter(sub => sub.id !== id);
-                await this.saveSubscriptions();
+                this.saveSubscriptions();
                 this.renderCalendar();
                 this.updateAnalytics();
+                this.updateBudgetProgress();
                 
                 // Refresh the log panel if it's currently visible
                 if (document.getElementById('logPanel').classList.contains('show')) {
@@ -1953,14 +2135,14 @@
                 }
             }
 
-            async updateNextBilling(id) {
+            updateNextBilling(id) {
                 const subscription = this.subscriptions.find(sub => sub.id === id);
                 if (subscription) {
                     subscription.nextBillingDate = this.calculateNextBillingDate(
                         new Date(subscription.nextBillingDate), 
                         subscription.billingCycle
                     ).toISOString();
-                    await this.saveSubscriptions();
+                    this.saveSubscriptions();
                     this.renderCalendar();
                     if (this.selectedDate) {
                         this.showDailyDetails(this.selectedDate.getDate());
@@ -2403,6 +2585,117 @@
                 }
             }
 
+            loadBudgetSettings() {
+                const budget = JSON.parse(localStorage.getItem('monthlyBudget')) || null;
+                if (budget) {
+                    document.getElementById('monthlyBudget').value = budget;
+                    this.updateBudgetProgress();
+                }
+            }
+
+            saveBudget() {
+                const budget = parseFloat(document.getElementById('monthlyBudget').value);
+                if (budget && budget > 0) {
+                    localStorage.setItem('monthlyBudget', JSON.stringify(budget));
+                    this.updateBudgetProgress();
+                } else {
+                    alert('Please enter a valid budget amount.');
+                }
+            }
+
+            calculateCurrentMonthSpending() {
+                const currentDate = new Date();
+                const currentMonth = currentDate.getMonth();
+                const currentYear = currentDate.getFullYear();
+                
+                let monthlySpending = 0;
+                
+                this.subscriptions.forEach(subscription => {
+                    const startDate = new Date(subscription.startDate);
+                    const billingCycle = subscription.billingCycle;
+                    
+                    if (billingCycle === 'monthly') {
+                        // Check if this subscription bills in the current month
+                        if (startDate.getMonth() === currentMonth && startDate.getFullYear() <= currentYear) {
+                            monthlySpending += subscription.price;
+                        }
+                    } else if (billingCycle === 'yearly') {
+                        // Check if this subscription bills in the current month
+                        if (startDate.getMonth() === currentMonth && startDate.getFullYear() <= currentYear) {
+                            monthlySpending += subscription.price;
+                        }
+                    } else if (billingCycle === 'weekly') {
+                        // Calculate weekly costs for the current month
+                        const firstDay = new Date(currentYear, currentMonth, 1);
+                        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+                        
+                        let weekDate = new Date(startDate);
+                        while (weekDate <= lastDay) {
+                            if (weekDate >= firstDay) {
+                                monthlySpending += subscription.price;
+                            }
+                            weekDate.setDate(weekDate.getDate() + 7);
+                        }
+                    }
+                });
+                
+                return monthlySpending;
+            }
+
+            updateBudgetProgress() {
+                const budget = JSON.parse(localStorage.getItem('monthlyBudget'));
+                const budgetProgressContainer = document.getElementById('budgetProgressContainer');
+                
+                if (!budget || budget <= 0) {
+                    budgetProgressContainer.style.display = 'none';
+                    return;
+                }
+                
+                const currentSpending = this.calculateCurrentMonthSpending();
+                const percentage = Math.min((currentSpending / budget) * 100, 100);
+                
+                // Update UI elements
+                document.getElementById('budgetAmount').textContent = `$${budget.toFixed(2)}`;
+                document.getElementById('budgetSpending').textContent = `$${currentSpending.toFixed(2)}`;
+                document.getElementById('budgetPercentage').textContent = `${percentage.toFixed(1)}%`;
+                
+                // Update progress bar
+                const progressFill = document.getElementById('budgetProgressFill');
+                progressFill.style.width = `${percentage}%`;
+                
+                // Update progress bar color based on budget status
+                const isDarkMode = document.body.classList.contains('dark-mode');
+                if (percentage >= 100) {
+                    // Budget exceeded - use red
+                    progressFill.style.background = '#ff0000';
+                } else {
+                    // Normal progress - use solid grey
+                    if (isDarkMode) {
+                        progressFill.style.background = '#cccccc';
+                    } else {
+                        progressFill.style.background = '#666666';
+                    }
+                }
+                
+                // Update status message
+                const budgetStatus = document.getElementById('budgetStatus');
+                if (percentage >= 100) {
+                    budgetStatus.textContent = '⚠️ Budget exceeded!';
+                    budgetStatus.style.color = '#ff0000';
+                } else if (percentage >= 80) {
+                    budgetStatus.textContent = '⚠️ Approaching budget limit';
+                    budgetStatus.style.color = '#FFC107';
+                } else if (percentage >= 50) {
+                    budgetStatus.textContent = '💰 Half of budget used';
+                    budgetStatus.style.color = '#8BC34A';
+                } else {
+                    budgetStatus.textContent = '';
+                    budgetStatus.style.color = '';
+                }
+                
+                budgetProgressContainer.style.display = 'block';
+            }
+
             saveNotificationSettings() {
                 const settings = {
                     emailAddress: document.getElementById('emailAddress').value,
@@ -2509,57 +2802,23 @@
                 }
             }
 
-            async loadSubscriptionsFromFirebase() {
-                if (!this.user) return;
-
+            loadSubscriptions() {
                 try {
                     this.isLoading = true;
-                    const userDoc = await db.collection('users').doc(this.user.uid).get();
-                    
-                    if (userDoc.exists) {
-                        const userData = userDoc.data();
-                        this.subscriptions = userData.subscriptions || [];
-                    } else {
-                        this.subscriptions = [];
-                    }
-                } catch (error) {
-                    console.error('Error loading subscriptions from Firebase:', error);
-                    // Fallback to localStorage
                     this.subscriptions = JSON.parse(localStorage.getItem('subscriptions')) || [];
+                } catch (error) {
+                    console.error('Error loading subscriptions:', error);
+                    this.subscriptions = [];
                 } finally {
                     this.isLoading = false;
                 }
             }
 
-            async saveSubscriptionsToFirebase() {
-                if (!this.user) return;
-
-                try {
-                    await db.collection('users').doc(this.user.uid).update({
-                        subscriptions: this.subscriptions
-                    });
-                } catch (error) {
-                    console.error('Error saving subscriptions to Firebase:', error);
-                    // Fallback to localStorage
-                    localStorage.setItem('subscriptions', JSON.stringify(this.subscriptions));
-                }
-            }
-
             saveSubscriptions() {
-                // Save to both Firebase and localStorage
-                this.saveSubscriptionsToFirebase();
-                localStorage.setItem('subscriptions', JSON.stringify(this.subscriptions));
-            }
-
-            async logout() {
                 try {
-                    await auth.signOut();
-                    // Clear local data
-                    this.subscriptions = [];
-                    localStorage.removeItem('subscriptions');
-                    // Redirect will happen automatically via auth state listener
+                    localStorage.setItem('subscriptions', JSON.stringify(this.subscriptions));
                 } catch (error) {
-                    console.error('Error logging out:', error);
+                    console.error('Error saving subscriptions:', error);
                 }
             }
         }
