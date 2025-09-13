@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const nodemailer = require('nodemailer');
+const TelegramBot = require('node-telegram-bot-api');
 const cors = require('cors');
 const path = require('path');
 
@@ -9,9 +10,22 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors());
+app.use(cors({
+    origin: true, // Allow all origins for now
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(express.static('.'));
+
+// Handle preflight requests
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.sendStatus(200);
+});
 
 // Email configuration
 const createTransporter = () => {
@@ -24,17 +38,63 @@ const createTransporter = () => {
     });
 };
 
+// Telegram configuration
+const telegramBot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: false });
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+// Telegram helper functions
+const sendTelegramMessage = async (message) => {
+    try {
+        await telegramBot.sendMessage(TELEGRAM_CHAT_ID, message, { parse_mode: 'HTML' });
+        console.log('Telegram message sent successfully');
+        return true;
+    } catch (error) {
+        console.error('Error sending Telegram message:', error);
+        return false;
+    }
+};
+
 // Routes
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
+// Test endpoint
+app.get('/api/test', (req, res) => {
+    res.json({ success: true, message: 'API is working!' });
+});
+
+// Send test Telegram message
+app.post('/api/send-test-telegram', async (req, res) => {
+    try {
+        console.log('Test Telegram request received');
+        
+        const message = `🔔 <b>Subscription Calendar Test Message</b>\n\n` +
+                       `This is a test message from your Subscription Calendar app!\n\n` +
+                       `✅ Telegram notifications are working correctly!`;
+        
+        const success = await sendTelegramMessage(message);
+        
+        if (success) {
+            res.json({ success: true, message: 'Test Telegram message sent successfully!' });
+        } else {
+            res.status(500).json({ error: 'Failed to send test Telegram message' });
+        }
+        
+    } catch (error) {
+        console.error('Error sending test Telegram message:', error);
+        res.status(500).json({ error: 'Failed to send test Telegram message', details: error.message });
+    }
+});
+
 // Send test email
 app.post('/api/send-test-email', async (req, res) => {
     try {
+        console.log('Test email request received:', req.body);
         const { emailAddress } = req.body;
         
         if (!emailAddress) {
+            console.log('No email address provided');
             return res.status(400).json({ error: 'Email address is required' });
         }
 
@@ -60,11 +120,12 @@ app.post('/api/send-test-email', async (req, res) => {
         };
 
         await transporter.sendMail(mailOptions);
+        console.log('Test email sent successfully to:', emailAddress);
         res.json({ success: true, message: 'Test email sent successfully!' });
         
     } catch (error) {
         console.error('Error sending test email:', error);
-        res.status(500).json({ error: 'Failed to send test email' });
+        res.status(500).json({ error: 'Failed to send test email', details: error.message });
     }
 });
 
@@ -118,7 +179,18 @@ app.post('/api/send-billing-notification', async (req, res) => {
         };
 
         await transporter.sendMail(mailOptions);
-        res.json({ success: true, message: 'Billing notification sent successfully!' });
+        
+        // Send Telegram notification
+        const telegramMessage = `⚠️ <b>Upcoming Subscription Billing</b>\n\n` +
+                              `You have <b>${subscriptions.length} subscription(s)</b> due in <b>${daysUntilBilling} days</b>.\n\n` +
+                              `💰 <b>Total Amount Due: $${totalAmount.toFixed(2)}</b>\n\n` +
+                              `📋 <b>Upcoming Subscriptions:</b>\n` +
+                              subscriptions.map(sub => `• ${sub.name} - $${sub.price} (${sub.billingCycle})`).join('\n') +
+                              `\n\n💡 <i>Make sure you have sufficient funds in your payment method to avoid any service interruptions.</i>`;
+        
+        await sendTelegramMessage(telegramMessage);
+        
+        res.json({ success: true, message: 'Billing notification sent successfully via email and Telegram!' });
         
     } catch (error) {
         console.error('Error sending billing notification:', error);
@@ -146,7 +218,11 @@ app.post('/api/check-upcoming-billing', async (req, res) => {
 
         if (upcomingSubscriptions.length > 0 && emailAddress) {
             // Send notification
-            const notificationResponse = await fetch(`http://localhost:${PORT}/api/send-billing-notification`, {
+            const baseUrl = process.env.NODE_ENV === 'production' 
+                ? 'https://azatech.onrender.com' 
+                : `http://localhost:${PORT}`;
+            
+            const notificationResponse = await fetch(`${baseUrl}/api/send-billing-notification`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
